@@ -8,6 +8,8 @@ from werkzeug.utils import secure_filename
 from encryption import encrypt_file
 from generate_key import generate_key
 
+#Vyrobila tvůrčí skupina Aleny Poledňákové a Vladimíra Tišňovského
+
 UPLOAD_FOLDER = '../public'
 ALLOWED_EXTENSIONS = {'txt'}
 
