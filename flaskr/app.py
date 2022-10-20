@@ -1,5 +1,5 @@
 import os
-from flask import Flask, flash, request, redirect, url_for
+from flask import Flask, flash, request, redirect, url_for, render_template
 from werkzeug.utils import secure_filename
 from encryption import encrypt_file
 from generate_key import generate_key
@@ -30,40 +30,8 @@ def upload_file():
             generate_key()
             encrypt_file(filename)
             return redirect(url_for('upload_file', name=filename))
-    if request.method == 'POST' and request.path == '/decrypt':
-        print('dadxa')
-    return '''
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Zadanie 2</title>
-        <link rel="stylesheet" href="./static/style.css" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
-        rel="stylesheet"
-        />
-    </head>
-    <body>
-        <div class=center>
-        <div class=title>
-            <h1>Šifrovanie a dešifrovanie súborov</h1>
-            <h3>symetrickým kľúčom K</h3>
-        </div>
-        <section>
-            <form method=post enctype=multipart/form-data>
-                <input type=file name=file>
-                <input type=submit value=Upload>
-            </form>
-        </section>
-        </div>
-    </body>
-    </html>
-
-    '''
+    return render_template('base.html')
+   
 
 @app.route('/uploads/<name>')
 def download_file(name):
