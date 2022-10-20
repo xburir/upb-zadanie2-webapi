@@ -31,7 +31,7 @@ def upload_file():
             encrypt_file(filename)
             return redirect(url_for('upload_file', name=filename))
     if request.method == 'POST' and request.path == '/decrypt':
-        print('dada')
+        print('dadxa')
     return '''
     <html lang="en">
     <head>
