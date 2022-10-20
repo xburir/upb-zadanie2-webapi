@@ -27,8 +27,11 @@ def upload_file():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            import time
+            start_time = time.time()
             generate_key()
             encrypt_file(filename)
+            print("--- %s seconds ---" % (time.time() - start_time))
             return redirect(url_for('upload_file', name=filename))
     if request.method == 'POST' and request.path == '/decrypt':
         print('dada')
