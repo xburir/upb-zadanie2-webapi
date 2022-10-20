@@ -1,4 +1,5 @@
 import os
+import time
 from io import BytesIO
 from glob import glob
 from zipfile import ZipFile
@@ -30,8 +31,10 @@ def upload_file():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            start_time = time.time()
             generate_key(filename)
             encrypt_file(filename)
+            print("--- %s seconds ---" % (time.time() - start_time))
             stream = BytesIO()
             with ZipFile(stream, 'w') as zf:
                 for file in glob(os.path.join('../public/', '*.txt')):
