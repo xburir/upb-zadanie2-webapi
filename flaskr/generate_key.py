@@ -1,11 +1,11 @@
 
 # import required module
-from cryptography.fernet import Fernet
+from secrets import token_bytes
 import os
 
 def generate_key(file_name):
     # key generation
-    key = Fernet.generate_key()
+    key = token_bytes(32)
 
     file_name_without_extension = os.path.splitext(file_name)[0]
     
