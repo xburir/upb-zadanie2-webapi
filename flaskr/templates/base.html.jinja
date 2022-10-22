@@ -12,12 +12,26 @@
 </head>
 
 <body>
+  <header>
+        <nav>
+            <ul>
+                <li id="decrypt_menu_button">
+                    <a href="./decrypt" >Decrypt</a>
+                </li>
+                <li id="encrypt_menu_button">
+                    <a href="./encrypt" >Encrypt</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
   <div class="center">
     <div class="title">
       {% if mode == 'decrypt' %}
       <h1>Dešifrovanie súborov</h1>
+      <script>document.getElementById("decrypt_menu_button").classList.add("selected")</script>
       {% else %}
       <h1>Šifrovanie súborov<h1>
+      <script>document.getElementById("encrypt_menu_button").classList.add("selected")</script>
       {% endif %}
       <h3>symetrickým kľúčom K</h3>
       {% for mesg in get_flashed_messages() %}
