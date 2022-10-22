@@ -20,6 +20,9 @@
       <h1>Šifrovanie súborov<h1>
       {% endif %}
       <h3>symetrickým kľúčom K</h3>
+      {% for mesg in get_flashed_messages() %}
+        <script>alert('{{mesg}}');</script>
+      {% endfor %}
     </div>
     <section>
       <form method=post enctype=multipart/form-data>
