@@ -72,7 +72,6 @@ def upload_file():
             stream = BytesIO() #VYGENERUJEME A STIAHNEME KLUCE
             with ZipFile(stream, 'w') as zf:
                 zf.writestr("publickey.pem",pubKey.save_pkcs1('PEM'))
-                zf.writestr("privatekey.pem",privKey.save_pkcs1('PEM'))
             stream.seek(0)
             return send_file(stream,
                              mimetype='zip',
