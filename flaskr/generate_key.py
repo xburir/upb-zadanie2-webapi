@@ -20,7 +20,7 @@ def generate_key(file_name):
     file_name_without_extension = os.path.splitext(file_name)[0]
     
     # string the key in a file
-    with open(f'../public/{file_name_without_extension}.key', 'wb') as filekey:
-        filekey.write(key)
+    #with open(f'../public/{file_name_without_extension}.key', 'wb') as filekey:
+    #   filekey.write(key)
 
     return key

@@ -74,7 +74,6 @@ def upload_file():
                 zf.writestr("publickey.pem",pubKey.save_pkcs1('PEM'))
                 zf.writestr("privatekey.pem",privKey.save_pkcs1('PEM'))
             stream.seek(0)
-            print("HAHAHAHA", file=sys.stderr)
             return send_file(stream,
                              mimetype='zip',
                              download_name='RSA.zip',
@@ -86,11 +85,9 @@ def upload_file():
         file = request.files['file']
         if file.filename.strip() == '':
             #flash('No selected file')
-            print("ZLE", file=sys.stderr)
             return redirect(request.url)
         file_list =request.files.getlist('file')
         if len(file_list) != 2:
-            print("ZLE", file=sys.stderr)
             #flash('Upload two files - file to decode and key')
             return redirect(request.url)
 #-----------------------------------------------------------------------------------------------------
@@ -126,6 +123,8 @@ def upload_file():
                     zf.write(file, os.path.basename(file))
                 zf.writestr("publickey.pem", RSA_public_key.save_pkcs1('PEM')) 
             stream.seek(0)
+            os.remove(app.config['UPLOAD_FOLDER'] +'/'+RSA_key_file_name)
+            os.remove(app.config['UPLOAD_FOLDER'] +'/'+filename)
             return send_file(stream,
                              mimetype='zip',
                              download_name='Encrypted.zip',
