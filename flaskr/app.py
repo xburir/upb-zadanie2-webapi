@@ -11,7 +11,6 @@ from decryption import decrypt_file
 from werkzeug.utils import secure_filename
 from encryption import encrypt_file
 from generate_key import generate_key
-#from Crypto.PublicKey import RSA
 import rsa
 import sys
 
@@ -32,10 +31,6 @@ app.config['SESSION_TYPE'] = 'filesystem'
 
 def generate_RSA():  #TU VYGENERUJEME RSA KLUC
     (pubKey, privKey) = rsa.newkeys(1024)
-    '''with open('/pubkey.pem','wb') as f:
-        f.write(pubKey.save_pkcs1('PEM'))
-    with open('/privkey.pem','wb') as f:
-        f.write(privKey.save_pkcs1('PEM'))'''
     return pubKey, privKey
 
 def load_keys():
@@ -46,7 +41,7 @@ def load_keys():
     return pubkey, privkey
 
 def encrypt_RSA(msg, key):
-    return rsa.encrypt(msg.encode('ascii'), key)
+    return rsa.encrypt(msg, key)
 
 def decrypt_RSA(ciphertext, key):
     try:
@@ -76,8 +71,8 @@ def upload_file():
             
             stream = BytesIO() #VYGENERUJEME A STIAHNEME KLUCE
             with ZipFile(stream, 'w') as zf:
-                zf.write("publickey.pem",pubKey.save_pkcs1('PEM'))
-                zf.write("privatekey.pem",privKey.save_pkcs1('PEM'))
+                zf.writestr("publickey.pem",pubKey.save_pkcs1('PEM'))
+                zf.writestr("privatekey.pem",privKey.save_pkcs1('PEM'))
             stream.seek(0)
             print("HAHAHAHA", file=sys.stderr)
             return send_file(stream,
@@ -86,23 +81,22 @@ def upload_file():
                              as_attachment=True)
 
         if 'file' not in request.files:
-            flash('No file part')
+            #flash('No file part')
             return redirect(request.url)
         file = request.files['file']
         if file.filename.strip() == '':
-            flash('No selected file')
+            #flash('No selected file')
             print("ZLE", file=sys.stderr)
             return redirect(request.url)
         file_list =request.files.getlist('file')
         if len(file_list) != 2:
             print("ZLE", file=sys.stderr)
-            flash('Upload two files - file to decode and key')
+            #flash('Upload two files - file to decode and key')
             return redirect(request.url)
 #-----------------------------------------------------------------------------------------------------
+        #NACITANIE FILEU A RSA KLUCA
         file_to_encrypt = find(file_list, lambda file: file.filename.endswith('.txt'))
         RSA_public_key = find(file_list, lambda file: file.filename.endswith('.pem'))
-        #RSA_public_key = rsa.PublicKey.load_pkcs1(RSA_public_key) #TUTO BUDE PROBLEM ASI S NACITANIM KLUCA
-    
 
         if file_to_encrypt == None or RSA_public_key == None:
             flash('Invalid files submitted')
@@ -116,26 +110,21 @@ def upload_file():
             file_to_encrypt.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             RSA_public_key.save(os.path.join(app.config['UPLOAD_FOLDER'], RSA_key_file_name))
 
-            with open(app.config['UPLOAD_FOLDER'] +'/'+RSA_public_key.filename, 'rb') as privateRSAKEY:
-                RSA_public_key=rsa.PublicKey.load_pkcs1(privateRSAKEY.read())
-        
+            with open(app.config['UPLOAD_FOLDER'] +'/'+RSA_public_key.filename, 'rb') as publicRSAKEY:
+                RSA_public_key=rsa.PublicKey.load_pkcs1(publicRSAKEY.read())
+
             
             #------------------------------------------------------------------------------------------
             AES_key = generate_key(filename) #TUTO KLUC DOSTANEME KLUC, ULOZI SA DO PUBLIC ZLOZKY
-            encrypt_file(filename) #ZASIFRUJEME FILE KLUCOM Z PUBLIC ZLOZKY
-
-            encrypt_RSA(str(AES_key), RSA_public_key) #str(AES_KEY) nam prekonvertuje AES_key
-
-
-
-
-
+            AES_encrypted = encrypt_RSA(AES_key, RSA_public_key)
+            encrypt_file(filename, AES_encrypted, AES_key)
+            
 
             stream = BytesIO()
             with ZipFile(stream, 'w') as zf:
                 for file in glob(os.path.join('../public/', '*.txt')):
                     zf.write(file, os.path.basename(file))
-                zf.writestr("publickey.pem", RSA_public_key.save_pkcs1('PEM')) #RSA_public_key.save_pkcs1('PEM')
+                zf.writestr("publickey.pem", RSA_public_key.save_pkcs1('PEM')) 
             stream.seek(0)
             return send_file(stream,
                              mimetype='zip',
@@ -164,26 +153,27 @@ def decrypt():
             flash('Upload two files - file to decode and key')
             return redirect(request.url)
         file_to_decrypt = find(file_list, lambda file: file.filename.endswith('.txt'))
-        decryption_key = find(file_list, lambda file: file.filename.endswith('.pem'))
-        if file_to_decrypt == None or decryption_key == None:
+        RSA_private_key = find(file_list, lambda file: file.filename.endswith('.pem'))
+        if file_to_decrypt == None or RSA_private_key == None:
             flash('Invalid files submitted')
             return redirect(request.url)
        #-----------------------------------------------------------------------------------------------------------------------------------------
-
         file_to_decrypt_filename = secure_filename(file_to_decrypt.filename)
         file_to_decrypt.save(os.path.join(app.config['DECRYPT_UPLOAD_FOLDER'], file_to_decrypt_filename))
-        decryption_key_filename = secure_filename(decryption_key.filename)
-        decryption_key.save(os.path.join(app.config['DECRYPT_UPLOAD_FOLDER'], decryption_key_filename))
-        decrypt_file(file_to_decrypt.filename, decryption_key.filename)
+        RSA_private_key_filename = secure_filename(RSA_private_key.filename)
+        RSA_private_key.save(os.path.join(app.config['DECRYPT_UPLOAD_FOLDER'], RSA_private_key_filename))
+        
+        with open(app.config['DECRYPT_UPLOAD_FOLDER'] +'/'+RSA_private_key.filename, 'rb') as privateRSAKEY:
+                RSA_private_key=rsa.PrivateKey.load_pkcs1(privateRSAKEY.read())
+        
+        decrypt_file(file_to_decrypt.filename, RSA_private_key)
         return send_from_directory(app.config["DECRYPT_UPLOAD_FOLDER"], 'decrypted.txt', as_attachment=True)
         #-------------------------------------------------------------------------------------------------------------------------------------------
     return render_template('base.html.jinja', mode='decrypt')
 
-
 @app.route('/')
 def redirect_to_encrypt():
     return redirect('/encrypt')
-
 
 @app.route('/uploads/<name>')
 def download_file(name):
