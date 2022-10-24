@@ -16,8 +16,6 @@ import sys
 
 
 
-#Vyrobila tvůrčí skupina Aleny Poledňákové a Vladimíra Tišňovského
-
 UPLOAD_FOLDER = '../public'
 DECRYPT_UPLOAD_FOLDER = '../public/decryption'
 ALLOWED_EXTENSIONS = {'txt'}
@@ -72,6 +70,7 @@ def upload_file():
             stream = BytesIO() #VYGENERUJEME A STIAHNEME KLUCE
             with ZipFile(stream, 'w') as zf:
                 zf.writestr("publickey.pem",pubKey.save_pkcs1('PEM'))
+                zf.writestr("privatekey.pem",privKey.save_pkcs1('PEM'))
             stream.seek(0)
             return send_file(stream,
                              mimetype='zip',
@@ -114,19 +113,16 @@ def upload_file():
             AES_key = generate_key(filename) #TUTO KLUC DOSTANEME KLUC, ULOZI SA DO PUBLIC ZLOZKY
             AES_encrypted = encrypt_RSA(AES_key, RSA_public_key)
             encrypt_file(filename, AES_encrypted, AES_key)
-            
 
             stream = BytesIO()
             with ZipFile(stream, 'w') as zf:
                 for file in glob(os.path.join('../public/', '*.txt')):
                     zf.write(file, os.path.basename(file))
-                zf.writestr("publickey.pem", RSA_public_key.save_pkcs1('PEM')) 
             stream.seek(0)
             os.remove(app.config['UPLOAD_FOLDER'] +'/'+RSA_key_file_name)
             os.remove(app.config['UPLOAD_FOLDER'] +'/'+filename)
             return send_file(stream,
-                             mimetype='zip',
-                             download_name='Encrypted.zip',
+                             download_name='Encrypted.txt',
                              as_attachment=True)
     return render_template('base.html.jinja', mode='encrypt')
 
