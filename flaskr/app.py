@@ -64,9 +64,8 @@ def allowed_file(filename):
 @app.route('/encrypt', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
-        pubKey, privKey = generate_RSA()
         if "open" in request.form:
-            
+            pubKey, privKey = generate_RSA()
             stream = BytesIO() #VYGENERUJEME A STIAHNEME KLUCE
             with ZipFile(stream, 'w') as zf:
                 zf.writestr("publickey.pem",pubKey.save_pkcs1('PEM'))
@@ -76,54 +75,52 @@ def upload_file():
                              mimetype='zip',
                              download_name='RSA.zip',
                              as_attachment=True)
-
-        if 'file' not in request.files:
-            #flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        if file.filename.strip() == '':
-            #flash('No selected file')
-            return redirect(request.url)
-        file_list =request.files.getlist('file')
-        if len(file_list) != 2:
-            #flash('Upload two files - file to decode and key')
-            return redirect(request.url)
+        if 'file' in request.files and "open" not in request.form:
+            file = request.files['file']
+            if file.filename.strip() == '':
+                flash('No selected file')
+                return redirect(request.url)
+            file_list =request.files.getlist('file')
+            if len(file_list) != 2:
+                flash('Upload two files - file to decode and key')
+                return redirect(request.url)
 #-----------------------------------------------------------------------------------------------------
-        #NACITANIE FILEU A RSA KLUCA
-        file_to_encrypt = find(file_list, lambda file: file.filename.endswith('.txt'))
-        RSA_public_key = find(file_list, lambda file: file.filename.endswith('.pem'))
+            #NACITANIE FILEU A RSA KLUCA
+            file_to_encrypt = find(file_list, lambda file: file.filename.endswith('.txt'))
+            RSA_public_key = find(file_list, lambda file: file.filename.endswith('.pem'))
 
-        if file_to_encrypt == None or RSA_public_key == None:
-            flash('Invalid files submitted')
-            print("ZLE", file=sys.stderr)
-            return redirect(request.url)
+            if file_to_encrypt == None or RSA_public_key == None:
+                flash('Invalid files submitted')
+                return redirect(request.url)
         #----------------------------------------------------------------------------------------------------
-        if file and allowed_file(file_to_encrypt.filename):
-            filename = secure_filename(file_to_encrypt.filename)
-            RSA_key_file_name = secure_filename(RSA_public_key.filename)
+            if file and allowed_file(file_to_encrypt.filename):
+                filename = secure_filename(file_to_encrypt.filename)
+                RSA_key_file_name = secure_filename(RSA_public_key.filename)
 
-            file_to_encrypt.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            RSA_public_key.save(os.path.join(app.config['UPLOAD_FOLDER'], RSA_key_file_name))
+                file_to_encrypt.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                RSA_public_key.save(os.path.join(app.config['UPLOAD_FOLDER'], RSA_key_file_name))
 
-            with open(app.config['UPLOAD_FOLDER'] +'/'+RSA_public_key.filename, 'rb') as publicRSAKEY:
-                RSA_public_key=rsa.PublicKey.load_pkcs1(publicRSAKEY.read())
+                with open(app.config['UPLOAD_FOLDER'] +'/'+RSA_public_key.filename, 'rb') as publicRSAKEY:
+                    RSA_public_key=rsa.PublicKey.load_pkcs1(publicRSAKEY.read())
+                #------------------------------------------------------------------------------------------
+                AES_key = generate_key(filename) #TUTO KLUC DOSTANEME KLUC, ULOZI SA DO PUBLIC ZLOZKY
+                AES_encrypted = encrypt_RSA(AES_key, RSA_public_key)
+                encrypt_file(filename, AES_encrypted, AES_key)
+                
 
-            
-            #------------------------------------------------------------------------------------------
-            AES_key = generate_key(filename) #TUTO KLUC DOSTANEME KLUC, ULOZI SA DO PUBLIC ZLOZKY
-            AES_encrypted = encrypt_RSA(AES_key, RSA_public_key)
-            encrypt_file(filename, AES_encrypted, AES_key)
-
-            stream = BytesIO()
-            with ZipFile(stream, 'w') as zf:
-                for file in glob(os.path.join('../public/', '*.txt')):
-                    zf.write(file, os.path.basename(file))
-            stream.seek(0)
-            os.remove(app.config['UPLOAD_FOLDER'] +'/'+RSA_key_file_name)
-            os.remove(app.config['UPLOAD_FOLDER'] +'/'+filename)
-            return send_file(stream,
+                stream = BytesIO()
+                with ZipFile(stream, 'w') as zf:
+                    for file in glob(os.path.join('../public/', '*.txt')):
+                        zf.write(file, os.path.basename(file))
+                    zf.writestr("publickey.pem", RSA_public_key.save_pkcs1('PEM')) 
+                stream.seek(0)
+                os.remove(app.config['UPLOAD_FOLDER'] +'/'+RSA_key_file_name)
+                os.remove(app.config['UPLOAD_FOLDER'] +'/'+filename)
+                return send_file(stream,
                              download_name='Encrypted.txt',
-                             as_attachment=True)
+                                as_attachment=True)
+            else:
+                flash('Invalid files submitted')
     return render_template('base.html.jinja', mode='encrypt')
 
 def find(list, condition):
