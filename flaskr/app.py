@@ -169,3 +169,7 @@ def redirect_to_encrypt():
 @app.route('/uploads/<name>')
 def download_file(name):
     return send_from_directory(app.config["UPLOAD_FOLDER"], name, as_attachment=True)
+
+@app.route('/download')
+def download_decrypter():
+    return send_from_directory("../","Offline_Decrypter.exe", as_attachment=True)
