@@ -112,12 +112,11 @@ def upload_file():
                 with ZipFile(stream, 'w') as zf:
                     for file in glob(os.path.join('../public/', '*.txt')):
                         zf.write(file, os.path.basename(file))
-                    zf.writestr("publickey.pem", RSA_public_key.save_pkcs1('PEM')) 
                 stream.seek(0)
                 os.remove(app.config['UPLOAD_FOLDER'] +'/'+RSA_key_file_name)
                 os.remove(app.config['UPLOAD_FOLDER'] +'/'+filename)
                 return send_file(stream,
-                             download_name='Encrypted.txt',
+                             download_name='Encrypted.zip',
                                 as_attachment=True)
             else:
                 flash('Invalid files submitted')
