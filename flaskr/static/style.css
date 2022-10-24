@@ -72,9 +72,24 @@ nav li{
   border-radius: 30%;
   margin: 0 10px;
   padding: 0.5% 1%;
-  background-color: #eeeeee;
+  background-color: #a3a39a;
 }
 
 li.selected{
-  background-color: #a3a39a;
+  background-color: #eeeeee;
 }
+
+a.link{
+  color: white;
+}
+
+a:link { text-decoration: none; }
+
+
+a:visited { text-decoration: none; }
+
+
+a:hover { text-decoration: none; }
+
+
+a:active { text-decoration: none; }
