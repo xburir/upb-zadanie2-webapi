@@ -11,6 +11,8 @@ from decryption import decrypt_file
 from werkzeug.utils import secure_filename
 from encryption import encrypt_file
 from generate_key import generate_key
+from passlib.hash import sha256_crypt
+from flask_mysqldb import MySQL
 import rsa
 import sys
 
@@ -26,6 +28,13 @@ app.config['DECRYPT_UPLOAD_FOLDER'] = DECRYPT_UPLOAD_FOLDER
 app.config['SECRET_KEY'] = "<some key>" 
 app.config['SESSION_TYPE'] = 'filesystem'
 
+#ZMENIT NA ZAKLADE SERVERA
+app.config['MYSQL_HOST'] = '127.0.0.1'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = 'root'
+app.config['MYSQL_DB'] = 'UPB'
+ 
+mysql = MySQL(app)
 
 def generate_RSA():  #TU VYGENERUJEME RSA KLUC
     (pubKey, privKey) = rsa.newkeys(1024)
@@ -172,3 +181,54 @@ def download_file(name):
 @app.route('/download')
 def download_decrypter():
     return send_from_directory("../","Offline_Decrypter.exe", as_attachment=True)
+
+'''
+Podstatou saltingu je ukrytie dalsej informacie v hashi, vytvorenom z hesla. Ide o skupinu znakov, 
+ktora sa pridaju k heslu a az potom sa zahashuje. Kazde heslo ulozene v systeme ma svoj vlastny salt, ktory je ulozeny s 
+prihlasovacim menom a zahashovanym heslom. Salt je najcastejsie nahodne generovane císlo
+'''
+def generate_salt(password):
+    #príklad vytvorenie saltu, z maleho pismena m, z císla c, zo znaku z, z velkého písmena v
+    salt = ""
+    for key in password:
+        if(key.isupper()):
+            salt += 'v'
+        elif(key.islower()):
+            salt += 'm'
+        elif(key.isnumeric()):
+            salt += 'c'
+        else:
+            salt += 'z'
+    return salt
+
+def generate_hashed_pass(salt,password):
+    #priklad vytvorenia hashovaneho hesla
+    return salt+password+salt
+
+def register(name,password):
+    salt = generate_salt(password)
+    hashed_pass = generate_hashed_pass(salt,password)
+    try:
+        cursor = mysql.connection.cursor()
+        statement = ("INSERT INTO users (name,hashed_password,salt) VALUES(%s,%s,%s)")
+        params = (name,hashed_pass,salt)
+        cursor.execute(statement,params)
+        mysql.connection.commit()
+        flash("register susccess")
+        cursor.close()
+    except Exception as e:
+        print(e)
+        if(e.args[0] == 1062):
+            flash("Username already exists")
+
+
+@app.route('/pass', methods=['GET', 'POST'])
+def password():
+    if "register" in request.form:
+        name = request.form.get("userName")
+        password = request.form.get("password")
+        register(name,password)
+       
+        
+        
+    return render_template('pass.html.jinja')
