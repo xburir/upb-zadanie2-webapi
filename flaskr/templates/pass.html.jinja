@@ -19,11 +19,36 @@
             <p>{{mesg}}</p>
         {% endfor %}
       <form method=post enctype=multipart/form-data>
+        
+
+        <label for="firstName">Krstné meno</label>
+        <input type="text" id="firstName" maxlength="20" name="firstName" required>
+
+        <label for="lastName">Priezvisko</label>
+        <input type="text" id="lastName" maxlength="20" name="lastName" required>
+
         <label for="userName">Prihlasovacie meno</label>
-        <input type="text" id="userName" maxlength="64" name="userName">
+        <input type="text" id="userName" maxlength="20" name="userName" required>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+
         <label for="password">Heslo</label>
-        <input type="password" id="password" maxlength="64" name="password">
+        <input type="password" id="password" maxlength="30" name="password" required>
+
+        <label for="passwordAgain">Znova heslo</label>
+        <input type="password" id="passwordAgain" maxlength="30" name="passwordAgain" required>
+
         <input type=submit value=Registruj name=register>
+      </form>
+      <form method=post enctype=multipart/form-data>
+        <label for="userName">Prihlasovacie meno</label>
+        <input type="text" id="userName" maxlength="20" name="userName" required>
+        <label for="password">Heslo</label>
+        <input type="password" id="password" maxlength="30" name="password" required>
+        
+        <input type=submit value=Prihlás name=login>
+
       </form>
     </section>
     

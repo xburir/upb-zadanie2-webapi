@@ -11,7 +11,6 @@ from decryption import decrypt_file
 from werkzeug.utils import secure_filename
 from encryption import encrypt_file
 from generate_key import generate_key
-from passlib.hash import sha256_crypt
 from flask_mysqldb import MySQL
 import rsa
 import sys
@@ -205,13 +204,13 @@ def generate_hashed_pass(salt,password):
     #priklad vytvorenia hashovaneho hesla
     return salt+password+salt
 
-def register(name,password):
+def register(userName,password,firstName,lastName,email):
     salt = generate_salt(password)
     hashed_pass = generate_hashed_pass(salt,password)
     try:
         cursor = mysql.connection.cursor()
-        statement = ("INSERT INTO users (name,hashed_password,salt) VALUES(%s,%s,%s)")
-        params = (name,hashed_pass,salt)
+        statement = ("INSERT INTO users (userName,hashed_pass,salt,firstName,lastName,email) VALUES(%s,%s,%s,%s,%s,%s)")
+        params = (userName,hashed_pass,salt,firstName,lastName,email)
         cursor.execute(statement,params)
         mysql.connection.commit()
         flash("register susccess")
@@ -219,16 +218,40 @@ def register(name,password):
     except Exception as e:
         print(e)
         if(e.args[0] == 1062):
-            flash("Username already exists")
+            flash("Username or email address already exists")
+
+
+def login(userName,password):
+    salt = generate_salt(password)
+    hashed_pass = generate_hashed_pass(salt,password)
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT * FROM users WHERE userName = %s",[userName])
+    response = cursor.fetchone()
+    if(hashed_pass == response[4]):
+        flash("prihlásený")
+    else:
+        flash("Nesprávne meno alebo heslo")
 
 
 @app.route('/pass', methods=['GET', 'POST'])
 def password():
     if "register" in request.form:
-        name = request.form.get("userName")
+        firstName = request.form.get("firstName")
+        lastName = request.form.get("lastName")
+        email = request.form.get("email")
+        userName = request.form.get("userName")
         password = request.form.get("password")
-        register(name,password)
-       
+        passAgain = request.form.get("passwordAgain")
+
+        if(password != passAgain):
+            flash("Passwords dont match")
+            return render_template('pass.html.jinja')
+        register(userName,password,firstName,lastName,email)
+
+    if "login" in request.form:
+        userName = request.form.get("userName")
+        password = request.form.get("password")
+        login(userName,password)
         
         
     return render_template('pass.html.jinja')
