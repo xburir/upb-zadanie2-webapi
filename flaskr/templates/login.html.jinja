@@ -1,0 +1,43 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zadanie 2</title>
+  <link rel="stylesheet" href="../static/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+ 
+  <div class="center">
+    <section>
+        {% for mesg in get_flashed_messages() %}
+            <p>{{mesg}}</p>
+        {% endfor %}
+      
+      <form method=post enctype=multipart/form-data>
+        <div class="row">
+          <label for="userName">Prihlasovacie meno</label>
+          <input type="text" id="userName" maxlength="20" name="userName" required>
+        </div>
+        <div class="row">
+          <label for="password">Heslo</label>
+          <input type="password" id="password" maxlength="30" name="password" required>
+        </div>
+        
+       
+        
+        <input type=submit value=Prihlás name=login>
+
+      </form>
+      <a class="link" href="register">Register</a>
+    </section>
+    
+  </div>
+</body>
+
+</html>

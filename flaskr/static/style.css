@@ -25,7 +25,7 @@ body {
 
 section {
   display: flex;
-  justify-content: space-evenly;
+  justify-content: center;
   align-items: center;
   flex-direction: column;
   height: 60vh;
@@ -52,12 +52,18 @@ header{
 }
 
 
-nav a {
+
+nav a, nav p{
   text-decoration: none;
   display: inline-block;
   color: black;
+  margin: 0;
 }
 
+nav p{
+  color: white;
+  font-size: 30px;
+}
 
 nav ul{
   list-style: none;
@@ -93,3 +99,17 @@ a:hover { text-decoration: none; }
 
 
 a:active { text-decoration: none; }
+
+form{
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+div.row{
+  display: flex;
+  justify-content: space-between;
+  align-content: stretch;
+  align-items: center;
+  gap: 5px;
+}

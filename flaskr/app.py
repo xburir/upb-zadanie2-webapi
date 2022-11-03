@@ -6,7 +6,7 @@ import time
 from io import BytesIO
 from glob import glob
 from zipfile import ZipFile
-from flask import Flask, flash, request, redirect, render_template, send_from_directory, send_file
+from flask import Flask, flash, request, redirect, render_template, send_from_directory, send_file, session
 from decryption import decrypt_file
 from werkzeug.utils import secure_filename
 from encryption import encrypt_file
@@ -71,6 +71,9 @@ def allowed_file(filename):
 
 @app.route('/encrypt', methods=['GET', 'POST'])
 def upload_file():
+    if "user" not in session:
+        print("user not in session")
+        return redirect('/login')
     if request.method == 'POST':
         if "open" in request.form:
             pubKey, privKey = generate_RSA()
@@ -128,7 +131,7 @@ def upload_file():
                                 as_attachment=True)
             else:
                 flash('Invalid files submitted')
-    return render_template('base.html.jinja', mode='encrypt')
+    return render_template('endecrypt.html.jinja', mode='encrypt')
 
 def find(list, condition):
     for i in range(len(list)):
@@ -138,6 +141,8 @@ def find(list, condition):
 
 @app.route('/decrypt', methods=['GET', 'POST'])
 def decrypt():
+    if "user" not in session:
+        return redirect('/login')
     if request.method == 'POST':
         if 'file' not in request.files:
             flash('No file part')
@@ -167,7 +172,7 @@ def decrypt():
         decrypt_file(file_to_decrypt.filename, RSA_private_key)
         return send_from_directory(app.config["DECRYPT_UPLOAD_FOLDER"], 'decrypted.txt', as_attachment=True)
         #-------------------------------------------------------------------------------------------------------------------------------------------
-    return render_template('base.html.jinja', mode='decrypt')
+    return render_template('endecrypt.html.jinja', mode='decrypt')
 
 @app.route('/')
 def redirect_to_encrypt():
@@ -175,10 +180,14 @@ def redirect_to_encrypt():
 
 @app.route('/uploads/<name>')
 def download_file(name):
+    if "user" not in session:
+        return redirect('/login')
     return send_from_directory(app.config["UPLOAD_FOLDER"], name, as_attachment=True)
 
 @app.route('/download')
 def download_decrypter():
+    if "user" not in session:
+        return redirect('/login')
     return send_from_directory("../","Offline_Decrypter.exe", as_attachment=True)
 
 '''
@@ -213,12 +222,13 @@ def register(userName,password,firstName,lastName,email):
         params = (userName,hashed_pass,salt,firstName,lastName,email)
         cursor.execute(statement,params)
         mysql.connection.commit()
-        flash("register susccess")
         cursor.close()
+        return 0
     except Exception as e:
         print(e)
         if(e.args[0] == 1062):
             flash("Username or email address already exists")
+        return -1
 
 
 def login(userName,password):
@@ -228,13 +238,29 @@ def login(userName,password):
     cursor.execute("SELECT * FROM users WHERE userName = %s",[userName])
     response = cursor.fetchone()
     if(hashed_pass == response[4]):
-        flash("prihlásený")
+        return 0
     else:
         flash("Nesprávne meno alebo heslo")
+        return -1
 
 
-@app.route('/pass', methods=['GET', 'POST'])
-def password():
+@app.route('/login', methods=['GET', 'POST'])
+def login_route():
+    if "user" in session:
+        print("redirecting to encrypt")
+        return redirect('/encrypt')
+    if "login" in request.form:
+        userName = request.form.get("userName")
+        password = request.form.get("password")
+        if login(userName,password) == 0:
+            session["user"] = userName
+            return redirect(('/encrypt'))
+    return render_template('login.html.jinja')
+
+@app.route('/register', methods=['GET','POST'])
+def register_route():
+    if "user" in session:
+        return redirect('/encrypt')
     if "register" in request.form:
         firstName = request.form.get("firstName")
         lastName = request.form.get("lastName")
@@ -242,16 +268,15 @@ def password():
         userName = request.form.get("userName")
         password = request.form.get("password")
         passAgain = request.form.get("passwordAgain")
-
         if(password != passAgain):
             flash("Passwords dont match")
-            return render_template('pass.html.jinja')
-        register(userName,password,firstName,lastName,email)
+            return render_template('register.html.jinja')
+        if register(userName,password,firstName,lastName,email) == 0:
+            session["user"] = userName
+            return redirect('/encrypt')
+    return render_template('register.html.jinja')
 
-    if "login" in request.form:
-        userName = request.form.get("userName")
-        password = request.form.get("password")
-        login(userName,password)
-        
-        
-    return render_template('pass.html.jinja')
+@app.route('/logout')
+def logout_route():
+    session.pop("user",None)
+    return redirect('/login')
