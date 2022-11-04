@@ -6,11 +6,12 @@ import time
 from io import BytesIO
 from glob import glob
 from zipfile import ZipFile
-from flask import Flask, flash, request, redirect, render_template, send_from_directory, send_file
+from flask import Flask, flash, request, redirect, render_template, send_from_directory, send_file, session
 from decryption import decrypt_file
 from werkzeug.utils import secure_filename
 from encryption import encrypt_file
 from generate_key import generate_key
+from flask_mysqldb import MySQL
 import rsa
 import sys
 
@@ -26,6 +27,13 @@ app.config['DECRYPT_UPLOAD_FOLDER'] = DECRYPT_UPLOAD_FOLDER
 app.config['SECRET_KEY'] = "<some key>" 
 app.config['SESSION_TYPE'] = 'filesystem'
 
+#ZMENIT NA ZAKLADE SERVERA
+app.config['MYSQL_HOST'] = '127.0.0.1'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = 'root'
+app.config['MYSQL_DB'] = 'UPB'
+ 
+mysql = MySQL(app)
 
 def generate_RSA():  #TU VYGENERUJEME RSA KLUC
     (pubKey, privKey) = rsa.newkeys(1024)
@@ -63,6 +71,9 @@ def allowed_file(filename):
 
 @app.route('/encrypt', methods=['GET', 'POST'])
 def upload_file():
+    if "user" not in session:
+        print("user not in session")
+        return redirect('/login')
     if request.method == 'POST':
         if "open" in request.form:
             pubKey, privKey = generate_RSA()
@@ -120,7 +131,7 @@ def upload_file():
                                 as_attachment=True)
             else:
                 flash('Invalid files submitted')
-    return render_template('base.html.jinja', mode='encrypt')
+    return render_template('endecrypt.html.jinja', mode='encrypt')
 
 def find(list, condition):
     for i in range(len(list)):
@@ -130,6 +141,8 @@ def find(list, condition):
 
 @app.route('/decrypt', methods=['GET', 'POST'])
 def decrypt():
+    if "user" not in session:
+        return redirect('/login')
     if request.method == 'POST':
         if 'file' not in request.files:
             flash('No file part')
@@ -159,7 +172,7 @@ def decrypt():
         decrypt_file(file_to_decrypt.filename, RSA_private_key)
         return send_from_directory(app.config["DECRYPT_UPLOAD_FOLDER"], 'decrypted.txt', as_attachment=True)
         #-------------------------------------------------------------------------------------------------------------------------------------------
-    return render_template('base.html.jinja', mode='decrypt')
+    return render_template('endecrypt.html.jinja', mode='decrypt')
 
 @app.route('/')
 def redirect_to_encrypt():
@@ -167,8 +180,103 @@ def redirect_to_encrypt():
 
 @app.route('/uploads/<name>')
 def download_file(name):
+    if "user" not in session:
+        return redirect('/login')
     return send_from_directory(app.config["UPLOAD_FOLDER"], name, as_attachment=True)
 
 @app.route('/download')
 def download_decrypter():
+    if "user" not in session:
+        return redirect('/login')
     return send_from_directory("../","Offline_Decrypter.exe", as_attachment=True)
+
+'''
+Podstatou saltingu je ukrytie dalsej informacie v hashi, vytvorenom z hesla. Ide o skupinu znakov, 
+ktora sa pridaju k heslu a az potom sa zahashuje. Kazde heslo ulozene v systeme ma svoj vlastny salt, ktory je ulozeny s 
+prihlasovacim menom a zahashovanym heslom. Salt je najcastejsie nahodne generovane císlo
+'''
+def generate_salt(password):
+    #príklad vytvorenie saltu, z maleho pismena m, z císla c, zo znaku z, z velkého písmena v
+    salt = ""
+    for key in password:
+        if(key.isupper()):
+            salt += 'v'
+        elif(key.islower()):
+            salt += 'm'
+        elif(key.isnumeric()):
+            salt += 'c'
+        else:
+            salt += 'z'
+    return salt
+
+def generate_hashed_pass(salt,password):
+    #priklad vytvorenia hashovaneho hesla
+    return salt+password+salt
+
+def register(userName,password,firstName,lastName,email):
+    salt = generate_salt(password)
+    hashed_pass = generate_hashed_pass(salt,password)
+    try:
+        cursor = mysql.connection.cursor()
+        statement = ("INSERT INTO users (userName,hashed_pass,salt,firstName,lastName,email) VALUES(%s,%s,%s,%s,%s,%s)")
+        params = (userName,hashed_pass,salt,firstName,lastName,email)
+        cursor.execute(statement,params)
+        mysql.connection.commit()
+        cursor.close()
+        return 0
+    except Exception as e:
+        print(e)
+        if(e.args[0] == 1062):
+            flash("Username or email address already exists")
+        return -1
+
+
+def login(userName,password):
+    salt = generate_salt(password)
+    hashed_pass = generate_hashed_pass(salt,password)
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT * FROM users WHERE userName = %s",[userName])
+    response = cursor.fetchone()
+    if(hashed_pass == response[4]):
+        return 0
+    else:
+        flash("Nesprávne meno alebo heslo")
+        return -1
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login_route():
+    if "user" in session:
+        print("redirecting to encrypt")
+        return redirect('/encrypt')
+    if "login" in request.form:
+        userName = request.form.get("userName")
+        password = request.form.get("password")
+        if login(userName,password) == 0:
+            session["user"] = userName
+            return redirect(('/encrypt'))
+    return render_template('login.html.jinja')
+
+@app.route('/register', methods=['GET','POST'])
+def register_route():
+    if "user" in session:
+        return redirect('/encrypt')
+    if "register" in request.form:
+        firstName = request.form.get("firstName")
+        lastName = request.form.get("lastName")
+        email = request.form.get("email")
+        userName = request.form.get("userName")
+        password = request.form.get("password")
+        passAgain = request.form.get("passwordAgain")
+        if(password != passAgain):
+            flash("Passwords dont match")
+            return render_template('register.html.jinja')
+        if register(userName,password,firstName,lastName,email) == 0:
+            session["user"] = userName
+            return redirect('/encrypt')
+    return render_template('register.html.jinja')
+
+@app.route('/logout')
+def logout_route():
+    session.pop("user",None)
+    return redirect('/login')
