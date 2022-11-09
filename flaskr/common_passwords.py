@@ -1,3 +1,5 @@
+# zdroj: https://en.wikipedia.org/wiki/Wikipedia:10,000_most_common_passwords
+
 top100_common_passwords = [
     '123456',
     'password',
