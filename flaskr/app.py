@@ -2,11 +2,12 @@ from __future__ import print_function
 from base64 import b64decode, b64encode
 from fileinput import filename
 import os
+from os import path
 import time
 from io import BytesIO
 from glob import glob
 from zipfile import ZipFile
-from flask import Flask, flash, request, redirect, render_template, send_from_directory, send_file, session
+from flask import Flask, flash, request, redirect, render_template, send_from_directory, send_file, session, Response
 from decryption import decrypt_file
 from werkzeug.utils import secure_filename
 from encryption import encrypt_file
@@ -213,6 +214,12 @@ def generate_hashed_pass(salt,password):
     #priklad vytvorenia hashovaneho hesla
     return salt+password+salt
 
+@app.route('/test', methods=['GET', 'POST'])
+def test():
+    return
+    
+    
+
 def register(userName,password,firstName,lastName,email):
     salt = generate_salt(password)
     hashed_pass = generate_hashed_pass(salt,password)
@@ -223,12 +230,29 @@ def register(userName,password,firstName,lastName,email):
         cursor.execute(statement,params)
         mysql.connection.commit()
         cursor.close()
-        return 0
+        pubKey, privKey = generate_RSA()
+        user = userName
+        cesta = "../keys/"+user+"/"
+
+        if not path.exists(cesta):
+            os.makedirs('../keys/'+user)
+
+        # Save private and pub key
+        priv_key_file = open(cesta+user+"_privateKey.pem", 'w')
+        priv_key_file.write(privKey.save_pkcs1().decode('utf-8'))
+        priv_key_file.close()
+        pub_key_file = open(cesta+user+"_publicKey.pem", 'w')
+        pub_key_file.write(pubKey.save_pkcs1().decode('utf-8'))
+        pub_key_file.close()
+        
+        
+        
     except Exception as e:
         print(e)
         if(e.args[0] == 1062):
             flash("Username or email address already exists")
         return -1
+    return 0
 
 
 def login(userName,password):
@@ -237,12 +261,23 @@ def login(userName,password):
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT * FROM users WHERE userName = %s",[userName])
     response = cursor.fetchone()
+    cursor.close()
     if(hashed_pass == response[4]):
         return 0
     else:
         flash("Nesprávne meno alebo heslo")
         return -1
 
+
+@app.route('/profile', methods=['POST','GET'])
+def profile_route():
+    if "user" not in session:
+        return redirect('/login')
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT * FROM users WHERE userName = %s",[session['user']])
+    response = cursor.fetchone()
+    cursor.close()
+    return render_template('profile.html.jinja',response = response)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_route():
@@ -280,3 +315,5 @@ def register_route():
 def logout_route():
     session.pop("user",None)
     return redirect('/login')
+
+#TODO send_from_directory("../keys/"+user+"/",user+"_privateKey.pem", as_attachment=True) button pri jeho tlacidle na profile
