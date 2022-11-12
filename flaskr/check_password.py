@@ -1,7 +1,7 @@
 # zdroj: https://www.geeksforgeeks.org/python-program-check-validity-password/
 from common_passwords import top100_common_passwords
 
-def check_password(password):
+def check_weak_password(password):
     lower, upper, special, digits = 0, 0, 0, 0
     if (len(password) >= 8):
         for i in password:
@@ -20,9 +20,9 @@ def check_password(password):
             # counting the mentioned special characters
             if(i=='@'or i=='$' or i=='_'):
                 special+=1          
-    return isPasswordValid(lower,upper,special,digits,password)
+    return isPasswordNotValid(lower,upper,special,digits,password)
     
-def isPasswordValid(lower,upper,special,digits,password):
+def isPasswordNotValid(lower,upper,special,digits,password):
     if(lower>=1 and upper>=1 and special>=1 and digits>=1 and lower+upper+special+digits==len(password) and password not in top100_common_passwords):
-        return 1;        
-    return 0;
+        return False;        
+    return True;

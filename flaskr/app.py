@@ -14,6 +14,7 @@ from generate_key import generate_key
 from flask_mysqldb import MySQL
 import rsa
 import sys
+import check_password
 
 
 
@@ -268,6 +269,9 @@ def register_route():
         userName = request.form.get("userName")
         password = request.form.get("password")
         passAgain = request.form.get("passwordAgain")
+        if(password and check_password.check_weak_password(password=password)):
+            flash('Weak password, please use password with at least 8 symbols including one upper letter, special symbol and number.')
+            return render_template('register.html.jinja')
         if(password != passAgain):
             flash("Passwords dont match")
             return render_template('register.html.jinja')
