@@ -10,15 +10,15 @@ def check_weak_password(password):
                 lower+=1           
     
             # counting uppercase alphabets
-            if (i.isupper()):
+            elif (i.isupper()):
                 upper+=1           
     
             # counting digits
-            if (i.isdigit()):
+            elif (i.isdigit()):
                 digits+=1           
     
             # counting the mentioned special characters
-            if(i=='@'or i=='$' or i=='_'):
+            else:
                 special+=1          
     return isPasswordNotValid(lower,upper,special,digits,password)
     
