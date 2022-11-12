@@ -16,13 +16,13 @@
         <nav>
             <ul>
                 <p>Logged in: {{ session['user'] }}</p>
-                <li id="decrypt_menu_button">
+                <li>
                     <a href="./decrypt" >Decrypt</a>
                 </li>
-                <li id="encrypt_menu_button">
+                <li>
                     <a href="./encrypt" >Encrypt</a>
                 </li>
-                <li>
+                <li class="selected">
                     <a href="./profile" >Profil</a>
                 </li>
                 <li>
@@ -33,29 +33,21 @@
     </header>
   <div class="center">
     <div class="title">
-      {% if mode == 'decrypt' %}
-      <h1>Dešifrovanie súborov</h1>
-      <script>document.getElementById("decrypt_menu_button").classList.add("selected")</script>
-      {% else %}
-      <h1>Šifrovanie súborov<h1>
-      <script>document.getElementById("encrypt_menu_button").classList.add("selected")</script>
-      {% endif %}
-      <h3>symetrickým kľúčom K</h3>
+      
+      <h1>Profil</h1>
       {% for mesg in get_flashed_messages() %}
         <script>alert('{{mesg}}')</script>
       {% endfor %}
+
+        <h3>ID: {{response[0]}}</h3>
+        <h3>Meno: {{response[1]}}</h3>
+        <h3>Priezvisko: {{response[2]}}</h3>
+        <h3>UserName: {{response[6]}}</h3>
+        <h3>Email: {{response[3]}}</h3>
+
     </div>
     <section>
-      <form method=post enctype=multipart/form-data>
-        <input type=file name=file multiple>
-        <input type=submit value=Upload>
-        {% if mode != 'decrypt' %}
-        <input type="submit" name="open" value="Generate RSA keys">
-        {% endif %}
-      </form>
-      {% if mode == 'decrypt' %}
-        <a class="link" href="download">Pokiaľ nechcete vkladať svoj privátny kľúč na server, kliknite na tento text</a>
-        {% endif %}
+      
     </section>
   </div>
 </body>
