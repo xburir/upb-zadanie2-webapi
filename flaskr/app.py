@@ -2,7 +2,7 @@ from __future__ import print_function
 from base64 import b64decode, b64encode
 from fileinput import filename
 import os
-from os import path
+from os import path, listdir
 import time
 from io import BytesIO
 from glob import glob
@@ -13,6 +13,7 @@ from werkzeug.utils import secure_filename
 from encryption import encrypt_file
 from generate_key import generate_key
 from flask_mysqldb import MySQL
+import bcrypt
 import rsa
 import sys
 import check_password
@@ -192,28 +193,13 @@ def download_decrypter():
         return redirect('/login')
     return send_from_directory("../","Offline_Decrypter.exe", as_attachment=True)
 
-'''
-Podstatou saltingu je ukrytie dalsej informacie v hashi, vytvorenom z hesla. Ide o skupinu znakov, 
-ktora sa pridaju k heslu a az potom sa zahashuje. Kazde heslo ulozene v systeme ma svoj vlastny salt, ktory je ulozeny s 
-prihlasovacim menom a zahashovanym heslom. Salt je najcastejsie nahodne generovane císlo
-'''
-def generate_salt(password):
-    #príklad vytvorenie saltu, z maleho pismena m, z císla c, zo znaku z, z velkého písmena v
-    salt = ""
-    for key in password:
-        if(key.isupper()):
-            salt += 'v'
-        elif(key.islower()):
-            salt += 'm'
-        elif(key.isnumeric()):
-            salt += 'c'
-        else:
-            salt += 'z'
-    return salt
 
-def generate_hashed_pass(salt,password):
-    #priklad vytvorenia hashovaneho hesla
-    return salt+password+salt
+def generate_hashed_pass(password):
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf8'),salt),salt
+
+def check_password(password,hashed_password):
+    return bcrypt.checkpw(password.encode('utf8'),hashed_password.encode('utf8'))
 
 @app.route('/test', methods=['GET', 'POST'])
 def test():
@@ -222,8 +208,7 @@ def test():
     
 
 def register(userName,password,firstName,lastName,email):
-    salt = generate_salt(password)
-    hashed_pass = generate_hashed_pass(salt,password)
+    hashed_pass,salt = generate_hashed_pass(password)
     try:
         cursor = mysql.connection.cursor()
         statement = ("INSERT INTO users (userName,hashed_pass,salt,firstName,lastName,email) VALUES(%s,%s,%s,%s,%s,%s)")
@@ -246,8 +231,6 @@ def register(userName,password,firstName,lastName,email):
         pub_key_file.write(pubKey.save_pkcs1().decode('utf-8'))
         pub_key_file.close()
         
-        
-        
     except Exception as e:
         print(e)
         if(e.args[0] == 1062):
@@ -257,13 +240,11 @@ def register(userName,password,firstName,lastName,email):
 
 
 def login(userName,password):
-    salt = generate_salt(password)
-    hashed_pass = generate_hashed_pass(salt,password)
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT * FROM users WHERE userName = %s",[userName])
     response = cursor.fetchone()
     cursor.close()
-    if(hashed_pass == response[4]):
+    if(check_password(password,response[4])):
         return 0
     else:
         flash("Nesprávne meno alebo heslo")
@@ -278,7 +259,8 @@ def profile_route():
     cursor.execute("SELECT * FROM users WHERE userName = %s",[session['user']])
     response = cursor.fetchone()
     cursor.close()
-    return render_template('profile.html.jinja',response = response)
+    files = listdir('../files/'+session['user'])
+    return render_template('profile.html.jinja',response = response,files=files)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_route():
@@ -320,4 +302,23 @@ def logout_route():
     session.pop("user",None)
     return redirect('/login')
 
-#TODO send_from_directory("../keys/"+user+"/",user+"_privateKey.pem", as_attachment=True) button pri jeho tlacidle na profile
+@app.route('/user/<user>/privkey')
+def download_private_key_route(user):
+    if "user" not in session:
+        return redirect('/login')
+    if session['user'] != user:
+        return redirect('/profile')
+    return send_from_directory("../keys/"+user+"/",user+"_privateKey.pem", as_attachment=True)
+
+
+@app.route('/user/<user>/pubkey')
+def download_public_key_route(user):
+    if "user"  not in session:
+        return redirect('/login')
+    return send_from_directory("../keys/"+user+"/",user+"_publicKey.pem", as_attachment=True)
+
+@app.route('/download/<user>/<file>')
+def download_users_file_route(user,file):
+    if "user"  not in session:
+        return redirect('/login')
+    return send_from_directory("../files/"+user+"/",file, as_attachment=True)

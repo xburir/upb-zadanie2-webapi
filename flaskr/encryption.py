@@ -2,6 +2,8 @@
 import os
 import sys
 from Crypto.Cipher import AES
+from os import path
+from flask import session
 
 def encrypt_file(file_name, AES_encrypted, AES_key):
     file_name_without_extension = os.path.splitext(file_name)[0]
@@ -37,6 +39,13 @@ def encrypt_file(file_name, AES_encrypted, AES_key):
     # writing the encrypted data 
     with open('../public/'+file_name, 'ab') as encrypted_file:
         encrypted_file.write(encrypted)
+
+    if not path.exists("../files"):
+        os.makedirs('../files')
+        if not path.exists("../files/"+session['user']):
+         os.makedirs('../files/'+session['user'])
+    with open('../files/'+session['user']+'/'+file_name,'ab') as saved_file:
+        saved_file.write(encrypted)
 
     print('\n--> encryption\ntag: ', tag,'\nAES_key', AES_key, '\nAES_encrypted: ', AES_encrypted, '\nnonce: ', nonce, '\nencrypted: ', encrypted, '\noriginal: ', original, '\n<--\n', file=sys.stderr)
     print("Length of bytes of AES_KEY: ", len(AES_key), file=sys.stderr)
