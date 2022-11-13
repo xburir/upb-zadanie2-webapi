@@ -13,10 +13,12 @@ from werkzeug.utils import secure_filename
 from encryption import encrypt_file
 from generate_key import generate_key
 from flask_mysqldb import MySQL
+from datetime import datetime, timedelta
 import bcrypt
 import rsa
 import sys
 import check_password
+import pytz
 
 
 
@@ -264,15 +266,25 @@ def profile_route():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_route():
+    utc=pytz.UTC
     if "user" in session:
         print("redirecting to encrypt")
         return redirect('/encrypt')
     if "login" in request.form:
+        if "login_cooldown" in session:
+            if(session['login_cooldown'] > utc.localize(datetime.now())):
+                #print("U ARE IN TIMEOUT", file=sys.stderr)
+                flash("Skúste prihlásenie znova o 10 sekúnd")
+                return render_template('login.html.jinja')
+        
+        session['login_cooldown'] = datetime.now() + timedelta(seconds=10)
+        #print(session['login_cooldown'], file=sys.stderr)
         userName = request.form.get("userName")
         password = request.form.get("password")
         if login(userName,password) == 0:
             session["user"] = userName
             return redirect(('/encrypt'))
+
     return render_template('login.html.jinja')
 
 @app.route('/register', methods=['GET','POST'])
