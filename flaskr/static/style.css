@@ -75,7 +75,7 @@ nav li{
   display: inline-block;
   font-size: 30px;
   border: 3px solid black;
-  border-radius: 30%;
+  border-radius: 2rem ;
   margin: 0 10px;
   padding: 0.5% 1%;
   background-color: #a3a39a;
@@ -129,10 +129,33 @@ div.photo{
   height: 200px;
 }
 
-div.files{
+div.centered{
   display: flex;
   justify-content: center;
   align-items: center;
   align-content: center;
   margin: 20px;
+}
+
+table{
+  margin: 10px;
+  padding: 10px;
+  width: 90%;
+  border-collapse: collapse;
+  border: 2px black solid;
+}
+
+table th{
+  border: 2px black solid;
+  padding: 3px;
+  background: gold;
+  color: black;
+}
+
+
+table td{
+  border: 1px black solid;
+  padding: 3px;
+  background-color: rgb(101, 100, 100);
+  text-align: center;
 }

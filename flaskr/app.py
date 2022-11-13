@@ -198,7 +198,7 @@ def generate_hashed_pass(password):
     salt = bcrypt.gensalt()
     return bcrypt.hashpw(password.encode('utf8'),salt),salt
 
-def check_password(password,hashed_password):
+def verify_password(password,hashed_password):
     return bcrypt.checkpw(password.encode('utf8'),hashed_password.encode('utf8'))
 
 @app.route('/test', methods=['GET', 'POST'])
@@ -244,7 +244,7 @@ def login(userName,password):
     cursor.execute("SELECT * FROM users WHERE userName = %s",[userName])
     response = cursor.fetchone()
     cursor.close()
-    if(check_password(password,response[4])):
+    if(verify_password(password,response[4])):
         return 0
     else:
         flash("Nesprávne meno alebo heslo")
@@ -294,6 +294,10 @@ def register_route():
             return render_template('register.html.jinja')
         if register(userName,password,firstName,lastName,email) == 0:
             session["user"] = userName
+            if not path.exists("../files"):
+                os.makedirs('../files')
+            if not path.exists("../files/"+session['user']):
+                os.makedirs('../files/'+session['user'])
             return redirect('/encrypt')
     return render_template('register.html.jinja')
 
@@ -322,3 +326,33 @@ def download_users_file_route(user,file):
     if "user"  not in session:
         return redirect('/login')
     return send_from_directory("../files/"+user+"/",file, as_attachment=True)
+
+@app.route('/users')
+def users_route():
+    if "user"  not in session:
+        return redirect('/login')
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT * FROM users WHERE NOT userName = %s",[session['user']])
+    response = cursor.fetchall()
+    cursor.close()
+    users = []
+    for user in response:   
+        info = []
+        info.append(user[1])
+        info.append(user[2])
+        info.append(user[6])
+        info.append(len(listdir('../files/'+user[6])))
+        users.append(info)
+    print(users)
+    return render_template('users.html.jinja',users=users)
+
+@app.route('/user/<user>')
+def user_route(user):
+    if "user"  not in session:
+        return redirect('/login')
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT * FROM users WHERE  userName = %s",[user])
+    response = cursor.fetchone()
+    cursor.close()
+   
+    return render_template('user.html.jinja',response=response,files = listdir('../files/'+user))

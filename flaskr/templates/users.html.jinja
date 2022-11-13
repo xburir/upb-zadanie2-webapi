@@ -22,10 +22,10 @@
                 <li>
                     <a href="./encrypt" >Encrypt</a>
                 </li>
-                <li class="selected">
+                <li>
                     <a href="./profile" >Profil</a>
                 </li>
-                <li>
+                <li class="selected">
                     <a href="./users" >Používatelia</a>
                 </li>
                 <li>
@@ -42,38 +42,29 @@
       {% endfor %}
 
 
-        <div class="profile">
-          <div class="photo">
-          </div>
-          <div>
-              <h3>ID: {{response[0]}}</h3>
-              <h3>Meno: {{response[1]}}</h3>
-              <h3>Priezvisko: {{response[2]}}</h3>
-              <h3>UserName: {{response[6]}}</h3>
-              <h3>Email: {{response[3]}}</h3>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 5px;">
-            <a href="./user/{{session['user']}}/privkey" class="link" >Stiahnuť privátny kľúč</a>
-            <a href="./user/{{session['user']}}/pubkey" class="link"  >Stiahnuť verejný kľúč</a>
-          </div>
-        </div>
-
-        <div class="centered">
+      <div class="centered">
           <table>
             <tr>
-              <th>Meno súboru</th>
-              <th>Download</th>
+              <th>Meno</th>
+              <th>Priezvisko</th>
+              <th>Používateľské meno</th>
+              <th>Počet zašifrovaných súborov</th>
+              <th></th>
             </tr>
 
-            {% for file in files %}
+            {% for user in users %}
                <tr>
-                <td>{{file}}</td>
-                <td><a href="./download/{{session['user']}}/{{file}}" class="link"  >DOWNLOAD</a></td>
+                <td>{{user[0]}}</td>
+                <td>{{user[1]}}</td>
+                <td>{{user[2]}}</td>
+                <td>{{user[3]}}</td>
+                <td><a href="./user/{{user[2]}}" class="link"  >Pozrieť profil</a></td>
               </tr>
             {% endfor %}
             
           </table>
         </div>
+        
        
 
     
