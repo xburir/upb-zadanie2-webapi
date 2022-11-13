@@ -20,6 +20,7 @@ body {
   width: 90%;
   background-color: rgb(60, 60, 60);
   opacity: 0.9;
+  border-radius: 0 0 2rem 2rem;
   box-shadow: 0 2px 32px rgba(0, 0, 0, 0.8);
 }
 
@@ -42,71 +43,82 @@ section {
   width: 80%;
 }
 
-header{
+header {
   margin-top: 2%;
   width: 90%;
   position: relative;
   text-align: center;
-  background-color:  rgb(60, 60, 60);
+  background-color: rgb(60, 60, 60);
   padding: 2% 0;
+  border-radius: 2rem 2rem 0 0;
 }
 
-
-
-nav a, nav p{
+nav a,
+nav p {
   text-decoration: none;
   display: inline-block;
   color: black;
   margin: 0;
 }
 
-nav p{
+nav p {
   color: white;
   font-size: 30px;
 }
 
-nav ul{
+nav ul {
   list-style: none;
   margin: 0;
 }
 
-nav li{
-
+nav li {
   display: inline-block;
-  font-size: 30px;
-  border: 3px solid black;
-  border-radius: 2rem ;
+  font-size: 25px;
+  border-radius: 1rem;
+  opacity: 0.7;
   margin: 0 10px;
   padding: 0.5% 1%;
   background-color: #a3a39a;
 }
 
-li.selected{
+nav li:hover {
   background-color: #eeeeee;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+  transition: 0.3s;
 }
 
-a.link{
+li.selected {
+  background-color: #eeeeee;
+  opacity: 1;
+}
+
+a.link {
   color: white;
 }
 
-a:link { text-decoration: none; }
+a:link {
+  text-decoration: none;
+}
 
+a:visited {
+  text-decoration: none;
+}
 
-a:visited { text-decoration: none; }
+a:hover {
+  text-decoration: none;
+}
 
+a:active {
+  text-decoration: none;
+}
 
-a:hover { text-decoration: none; }
-
-
-a:active { text-decoration: none; }
-
-form{
+form {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
 
-div.row{
+div.row {
   display: flex;
   justify-content: space-between;
   align-content: stretch;
@@ -114,7 +126,7 @@ div.row{
   gap: 5px;
 }
 
-div.profile{
+div.profile {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -123,13 +135,13 @@ div.profile{
   margin: 20px;
 }
 
-div.photo{
+div.photo {
   background-color: white;
   width: 100px;
   height: 200px;
 }
 
-div.centered{
+div.centered {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -137,7 +149,7 @@ div.centered{
   margin: 20px;
 }
 
-table{
+table {
   margin: 10px;
   padding: 10px;
   width: 90%;
@@ -145,15 +157,14 @@ table{
   border: 2px black solid;
 }
 
-table th{
+table th {
   border: 2px black solid;
   padding: 3px;
   background: gold;
   color: black;
 }
 
-
-table td{
+table td {
   border: 1px black solid;
   padding: 3px;
   background-color: rgb(101, 100, 100);
