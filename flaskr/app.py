@@ -260,6 +260,41 @@ def profile_route():
     response = cursor.fetchone()
     cursor.close()
     files = listdir('../files/'+session['user'])
+    # Upload own private or public key
+    if request.method == 'POST':
+        if 'file_own_private_key' not in request.files and 'file_own_public_key' not in request.files :
+            flash('No file part')
+            return redirect(request.url)
+        elif 'file_own_private_key' in request.files:
+            file = request.files['file_own_private_key']
+        else:
+            file = request.files['file_own_public_key']
+        if file.filename.strip() == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if 'file_own_private_key' in request.files:
+            file_list = request.files.getlist('file_own_private_key')
+        else:
+            file_list = request.files.getlist('file_own_public_key')
+
+        if len(file_list) != 1:
+            flash('Upload exactly one file.')
+            return redirect(request.url)
+        uploaded_key = find(file_list, lambda file: file.filename.endswith('.pem'))
+        if uploaded_key is None:
+            flash('Invalid file submitted')
+            return redirect(request.url)
+
+        user = session["user"]
+        folder_path = "../keys/" + user + "/"
+
+        if 'file_own_private_key' in request.files:
+            uploaded_key_filename = user+"_privateKey.pem"
+        else:
+            uploaded_key_filename = user+"_publicKey.pem"
+
+        uploaded_key.save(os.path.join(folder_path, uploaded_key_filename))
+
     return render_template('profile.html.jinja',response = response,files=files)
 
 @app.route('/login', methods=['GET', 'POST'])
