@@ -33,9 +33,9 @@ app.config['SECRET_KEY'] = "<some key>"
 app.config['SESSION_TYPE'] = 'filesystem'
 
 #ZMENIT NA ZAKLADE SERVERA
-app.config['MYSQL_HOST'] = '127.0.0.1'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'root'
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'admin'
+app.config['MYSQL_PASSWORD'] = 'admin'
 app.config['MYSQL_DB'] = 'UPB'
  
 mysql = MySQL(app)
@@ -226,11 +226,11 @@ def register(userName,password,firstName,lastName,email):
             os.makedirs('../keys/'+user)
 
         # Save private and pub key
-        priv_key_file = open(cesta+user+"_privateKey.pem", 'w')
-        priv_key_file.write(privKey.save_pkcs1().decode('utf-8'))
+        priv_key_file = open(cesta+user+"_privateKey.pem", 'wb')
+        priv_key_file.write(privKey.save_pkcs1('PEM'))
         priv_key_file.close()
-        pub_key_file = open(cesta+user+"_publicKey.pem", 'w')
-        pub_key_file.write(pubKey.save_pkcs1().decode('utf-8'))
+        pub_key_file = open(cesta+user+"_publicKey.pem", 'wb')
+        pub_key_file.write(pubKey.save_pkcs1('PEM'))
         pub_key_file.close()
         
     except Exception as e:

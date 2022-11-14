@@ -23,23 +23,41 @@ def encrypt_file(file_name, AES_encrypted, AES_key):
     with open('../public/'+file_name, 'a') as encrypted_file:
         encrypted_file.write(',,')
 
+    with open('../files/'+session['user']+'/'+file_name,'wb') as saved_file:
+        saved_file.write(tag)
+    with open('../files/'+session['user']+'/'+file_name,'a') as saved_file:
+        saved_file.write(',,')
+
+
+
     # writing nonce to header 
     with open('../public/' + file_name, 'ab') as encrypted_file:
         encrypted_file.write(nonce)
     with open('../public/'+file_name, 'a') as encrypted_file:
         encrypted_file.write(',,')
+    
+    with open('../files/'+session['user']+'/'+file_name,'ab') as saved_file:
+        saved_file.write(nonce)
+    with open('../files/'+session['user']+'/'+file_name,'a') as saved_file:
+        saved_file.write(',,')
+
+
 
     #write encrypted AES key to header
     with open('../public/' + file_name, 'ab') as encrypted_file:
         encrypted_file.write(AES_encrypted)
     with open('../public/'+file_name, 'a') as encrypted_file:
         encrypted_file.write(',,')
+
+    with open('../files/'+session['user']+'/'+file_name,'ab') as saved_file:
+        saved_file.write(AES_encrypted)
+    with open('../files/'+session['user']+'/'+file_name,'a') as saved_file:
+        saved_file.write(',,')
     
 
     # writing the encrypted data 
     with open('../public/'+file_name, 'ab') as encrypted_file:
         encrypted_file.write(encrypted)
-
     
     with open('../files/'+session['user']+'/'+file_name,'ab') as saved_file:
         saved_file.write(encrypted)
