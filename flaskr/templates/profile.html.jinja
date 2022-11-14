@@ -55,6 +55,16 @@
           <div style="display: flex; flex-direction: column; gap: 5px;">
             <a href="./user/{{session['user']}}/privkey" class="link" >Stiahnuť privátny kľúč</a>
             <a href="./user/{{session['user']}}/pubkey" class="link"  >Stiahnuť verejný kľúč</a>
+            <form method=post enctype=multipart/form-data>
+                <h4>Zvoliť vlastný privátny kľúč</h4>
+                <input type=file name=file_own_private_key multiple>
+                <input type=submit value="Nahrať kľúč">
+            </form>
+            <form method=post enctype=multipart/form-data>
+                <h4>Zvoliť vlastný verejný kľúč</h4>
+                <input type=file name=file_own_public_key multiple>
+                <input type=submit value="Nahrať kľúč">
+            </form>
           </div>
         </div>
 
