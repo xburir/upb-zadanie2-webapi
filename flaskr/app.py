@@ -246,6 +246,9 @@ def login(userName,password):
     cursor.execute("SELECT * FROM users WHERE userName = %s",[userName])
     response = cursor.fetchone()
     cursor.close()
+    if response is None :
+        flash("Nesprávne meno alebo heslo")
+        return -1
     if(verify_password(password,response[4])):
         return 0
     else:
@@ -308,8 +311,8 @@ def login_route():
     if "login" in request.form:
         if "login_cooldown" in session:
             if(session['login_cooldown'] > utc.localize(datetime.now())):
-                #print("U ARE IN TIMEOUT", file=sys.stderr)
-                flash("Skúste prihlásenie znova o 10 sekúnd")
+                #print("U ARE IN TIMEOUT", file=sys.stderr)     
+                flash("Skúste prihlásenie znova o "+ str(int((session['login_cooldown'] - utc.localize(datetime.now())).total_seconds()//1)) +" sekúnd/sekundy")
                 return render_template('login.html.jinja')
         
         session['login_cooldown'] = datetime.now() + timedelta(seconds=10)
