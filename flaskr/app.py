@@ -246,6 +246,8 @@ def profile_route():
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT * FROM users WHERE userName = %s",[session['user']])
     response = cursor.fetchone()
+    cursor.execute("SELECT * FROM comments WHERE  userName = %s",[session['user']])
+    responseComments = cursor.fetchall()
     cursor.close()
     files = listdir('../files/'+session['user'])
     # Upload own private or public key
@@ -283,7 +285,7 @@ def profile_route():
 
         uploaded_key.save(os.path.join(folder_path, uploaded_key_filename))
 
-    return render_template('profile.html.jinja',response = response,files=files)
+    return render_template('profile.html.jinja',response = response,responseComments = responseComments, files=files)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_route():
@@ -334,6 +336,8 @@ def register_route():
             return redirect('/encrypt')
     return render_template('register.html.jinja')
 
+
+
 @app.route('/logout')
 def logout_route():
     session.pop("user",None)
@@ -379,6 +383,29 @@ def users_route():
     print(users)
     return render_template('users.html.jinja',users=users)
 
+@app.route('/users', methods=['POST'])
+def users_search():
+    print("TUUUUUUUUUUUUUUU")
+    if "user"  not in session:
+        return redirect('/login')
+    if "searchUsers" in request.form:
+        lastNameSearch=request.form.get("lastName")
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT * FROM users WHERE NOT userName = %s",[session['user']])
+        response = cursor.fetchall()
+        cursor.close()
+        users = []
+        for user in response:   
+            if lastNameSearch in user[2]:
+                info = []
+                info.append(user[1])
+                info.append(user[2])
+                info.append(user[6])
+                info.append(len(listdir('../files/'+user[6])))
+                users.append(info)
+        print("HLADANY", users)
+    return render_template('users.html.jinja',users=users)
+
 @app.route('/user/<user>')
 def user_route(user):
     if "user"  not in session:
@@ -386,6 +413,24 @@ def user_route(user):
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT * FROM users WHERE  userName = %s",[user])
     response = cursor.fetchone()
+    cursor.execute("SELECT * FROM comments WHERE  userName = %s",[user])
+    responseComments = cursor.fetchall()
     cursor.close()
-   
-    return render_template('user.html.jinja',response=response,files = listdir('../files/'+user))
+
+    return render_template('user.html.jinja',responseComments=responseComments, response=response,files = listdir('../files/'+user))
+
+@app.route('/user/<user>', methods=['POST'])
+def addComment(user):
+    print("PRIDAL SOM KOMENTAR")
+    if "user"  not in session:
+        return redirect('/login')
+    if "add_comment" in request.form:
+        new_comment = request.form.get("comment")
+        user_name = request.form.get("userName")
+        cursor = mysql.connection.cursor()
+        statement = ("INSERT INTO comments (comment, userName) VALUES(%s,%s)")
+        params = (new_comment, user_name)
+        cursor.execute(statement,params)
+        mysql.connection.commit()
+        cursor.close()
+        return redirect(request.url)

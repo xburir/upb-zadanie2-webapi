@@ -41,6 +41,15 @@
         <script>alert('{{mesg}}')</script>
       {% endfor %}
 
+      <div class="centered">
+        <form method=post enctype=multipart/form-data>
+          <div>
+            <label for="comment">Priezvisko</label>
+            <input type="text" id="lastName" maxlength="20" name="lastName">
+          </div>
+          <input type=submit value="Vyhladaj" name=searchUsers>
+        </form>
+      </div>
 
       <div class="centered">
           <table>

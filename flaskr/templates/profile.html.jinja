@@ -81,6 +81,17 @@
             {% endfor %}
             
           </table>
+
+          <table>
+            <tr>
+              <th>Komentare</th>
+            </tr>
+            {% for comment in responseComments %}
+               <tr>
+                <td>{{comment[1]}}</td>
+                </tr>
+            {% endfor %}
+          </table>
         </div>
        
 
