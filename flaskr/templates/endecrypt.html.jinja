@@ -13,52 +13,53 @@
 
 <body>
   <header>
-        <nav>
-            <ul>
-                <p>Logged in: {{ session['user'] }}</p>
-                <li id="decrypt_menu_button">
-                    <a href="./decrypt" >Decrypt</a>
-                </li>
-                <li id="encrypt_menu_button">
-                    <a href="./encrypt" >Encrypt</a>
-                </li>
-                <li>
-                    <a href="./profile" >Profil</a>
-                </li>
-                <li>
-                    <a href="./users" >Používatelia</a>
-                </li>
-                <li>
-                    <a href="./logout" >Logout</a>
-                </li>
-            </ul>
-        </nav>
-    </header>
+    <nav>
+      <ul>
+        <p>Logged in: {{ session['user'] }}</p>
+        <li id="decrypt_menu_button">
+          <a href="./decrypt">Decrypt</a>
+        </li>
+        <li id="encrypt_menu_button">
+          <a href="./encrypt">Poslat subor</a>
+        </li>
+        <li>
+          <a href="./profile">Profil</a>
+        </li>
+        <li>
+          <a href="./users">Používatelia</a>
+        </li>
+        <li>
+          <a href="./logout">Logout</a>
+        </li>
+      </ul>
+    </nav>
+  </header>
   <div class="center">
     <div class="title">
       {% if mode == 'decrypt' %}
-      <h1>Dešifrovanie súborov</h1>
+      <h1>Posielanie súboru</h1>
       <script>document.getElementById("decrypt_menu_button").classList.add("selected")</script>
       {% else %}
-      <h1>Šifrovanie súborov<h1>
-      <script>document.getElementById("encrypt_menu_button").classList.add("selected")</script>
-      {% endif %}
-      <h3>symetrickým kľúčom K</h3>
-      {% for mesg in get_flashed_messages() %}
-        <script>alert('{{mesg}}')</script>
-      {% endfor %}
+      <h1>Posielanie súborov<h1>
+          <script>document.getElementById("encrypt_menu_button").classList.add("selected")</script>
+          {% endif %}
+          {% for mesg in get_flashed_messages() %}
+          <script>alert('{{mesg}}')</script>
+          {% endfor %}
     </div>
     <section>
       <form method=post enctype=multipart/form-data>
         <input type=file name=file multiple>
+        <select name="user_select">
+          {% for user in users %}
+          <option value="{{user}}" name="{{user}}">{{user}}</option>
+          {% endfor %}
+        </select>
         <input type=submit value=Upload>
-        {% if mode != 'decrypt' %}
-        <input type="submit" name="open" value="Generate RSA keys">
-        {% endif %}
       </form>
       {% if mode == 'decrypt' %}
-        <a class="link" href="download">Pokiaľ nechcete vkladať svoj privátny kľúč na server, kliknite na tento text</a>
-        {% endif %}
+      <a class="link" href="download">Pokiaľ nechcete vkladať svoj privátny kľúč na server, kliknite na tento text</a>
+      {% endif %}
     </section>
   </div>
 </body>
