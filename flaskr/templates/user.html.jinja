@@ -71,9 +71,31 @@
             
           </table>
         </div>
-       
 
-    
+        <div class="centered">
+
+        <form method=post enctype=multipart/form-data>
+          <div>
+            <label for="comment">Komentar</label>
+            <input type="text" id="comment" maxlength="50" name="comment" required>
+            <input type="hidden" id="userName" name="userName" value="{{response[6]}}">
+          </div>
+          <input type=submit value="Pridaj komentar" name=add_comment>
+        </form>
+        </div>
+        <div class="centered">
+          <table>
+            <tr>
+              <th>Komentare</th>
+            </tr>
+            {% for comment in responseComments %}
+               <tr>
+                <td>{{comment[1]}}</td>
+                </tr>
+            {% endfor %}
+          </table>
+        </div>
+
   </div>
 </body>
 
