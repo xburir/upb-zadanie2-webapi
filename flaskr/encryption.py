@@ -5,7 +5,7 @@ from Crypto.Cipher import AES
 from os import path
 from flask import session
 
-def encrypt_file(file_name, AES_encrypted, AES_key):
+def encrypt_file(file_name, AES_encrypted, AES_key, target):
     file_name_without_extension = os.path.splitext(file_name)[0]
 
     # opening the original file to encrypt
@@ -22,6 +22,11 @@ def encrypt_file(file_name, AES_encrypted, AES_key):
         encrypted_file.write(tag)
     with open('../public/'+file_name, 'a') as encrypted_file:
         encrypted_file.write(',,')
+    
+    with open('../files/'+target+'/'+file_name,'wb') as saved_file:
+        saved_file.write(tag)
+    with open('../files/'+target+'/'+file_name,'a') as saved_file:
+        saved_file.write(',,')
 
     # writing nonce to header 
     with open('../public/' + file_name, 'ab') as encrypted_file:
@@ -29,11 +34,21 @@ def encrypt_file(file_name, AES_encrypted, AES_key):
     with open('../public/'+file_name, 'a') as encrypted_file:
         encrypted_file.write(',,')
 
+    with open('../files/'+target+'/'+file_name,'ab') as saved_file:
+        saved_file.write(nonce)
+    with open('../files/'+target+'/'+file_name,'a') as saved_file:
+        saved_file.write(',,')
+
     #write encrypted AES key to header
     with open('../public/' + file_name, 'ab') as encrypted_file:
         encrypted_file.write(AES_encrypted)
     with open('../public/'+file_name, 'a') as encrypted_file:
         encrypted_file.write(',,')
+
+    with open('../files/'+target+'/'+file_name,'ab') as saved_file:
+        saved_file.write(AES_encrypted)
+    with open('../files/'+target+'/'+file_name,'a') as saved_file:
+        saved_file.write(',,')
     
 
     # writing the encrypted data 
@@ -41,7 +56,7 @@ def encrypt_file(file_name, AES_encrypted, AES_key):
         encrypted_file.write(encrypted)
 
     
-    with open('../files/'+session['user']+'/'+file_name,'ab') as saved_file:
+    with open('../files/'+target+'/'+file_name,'ab') as saved_file:
         saved_file.write(encrypted)
 
     print('\n--> encryption\ntag: ', tag,'\nAES_key', AES_key, '\nAES_encrypted: ', AES_encrypted, '\nnonce: ', nonce, '\nencrypted: ', encrypted, '\noriginal: ', original, '\n<--\n', file=sys.stderr)

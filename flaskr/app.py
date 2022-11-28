@@ -34,8 +34,8 @@ app.config['SESSION_TYPE'] = 'filesystem'
 
 #ZMENIT NA ZAKLADE SERVERA
 app.config['MYSQL_HOST'] = '127.0.0.1'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'root'
+app.config['MYSQL_USER'] = 'admin'
+app.config['MYSQL_PASSWORD'] = 'admin'
 app.config['MYSQL_DB'] = 'UPB'
  
 mysql = MySQL(app)
@@ -92,17 +92,11 @@ def upload_file():
         if not path.exists(keyPath):
             return
 
-        print("KEYPATH" )
-        print(keyPath )
-        print("select" ,select)
-
-        pub_key_file = open(keyPath+f"{select}_publicKey.pem", 'r')
+        pub_key_file = open(keyPath+f"{select}_publicKey.pem", 'rb')
         #private key
         public_key = pub_key_file.read()
         pub_key_file.close()
         RSA_public_key=rsa.PublicKey.load_pkcs1(public_key)
-        
-        print("PRIVATE KEY", public_key)
         
         file = request.files['file']
         if file.filename.strip() == '':
@@ -112,16 +106,16 @@ def upload_file():
         if len(file_list) != 1:
             flash('Upload one file')
             return redirect(request.url)
-
-        writePath = f"../files/{select}/"
-        file_list =request.files.getlist('file')
-        #File data
-        data = file_list[0].read().decode("utf-8")
-        encrypted_file = encrypt_RSA(data, RSA_public_key)
         
-        new_file = open(writePath+secure_filename(file_list[0].filename), 'wb')
-        #write here
-        new_file.write(encrypted_file)
+        file_to_encrypt = find(file_list, lambda file: file.filename.endswith('.txt'))
+        filename = secure_filename(file_to_encrypt.filename)
+        file_to_encrypt.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        
+        AES_key = generate_key(filename)
+        AES_encrypted = encrypt_RSA(AES_key, RSA_public_key)
+        encrypt_file(filename, AES_encrypted, AES_key, select)
+        os.remove(app.config['UPLOAD_FOLDER'] +'/'+filename)
+
     return render_template('endecrypt.html.jinja', mode='encrypt', users=users)
 
 def find(list, condition):
@@ -212,11 +206,11 @@ def register(userName,password,firstName,lastName,email):
             os.makedirs('../keys/'+user)
 
         # Save private and pub key
-        priv_key_file = open(cesta+user+"_privateKey.pem", 'w')
-        priv_key_file.write(privKey.save_pkcs1().decode('utf-8'))
+        priv_key_file = open(cesta+user+"_privateKey.pem", 'wb')
+        priv_key_file.write(privKey.save_pkcs1('PEM'))
         priv_key_file.close()
-        pub_key_file = open(cesta+user+"_publicKey.pem", 'w')
-        pub_key_file.write(pubKey.save_pkcs1().decode('utf-8'))
+        pub_key_file = open(cesta+user+"_publicKey.pem", 'wb')
+        pub_key_file.write(pubKey.save_pkcs1('PEM'))
         pub_key_file.close()
         
     except Exception as e:

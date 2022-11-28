@@ -11,11 +11,8 @@ def decrypt_RSA(ciphertext, key):
         return False
 
 def decrypt_file(file_filename, RSA_key):
-    # opening the key
-    #with open(f'../public/decryption/{key_filename}', 'rb') as filekey:
-    #    key = filekey.read()
-    
     # opening the encrypted file
+    print("opening "+'../public/decryption/'+file_filename)
     with open('../public/decryption/'+file_filename, 'rb') as enc_file:
         enc_bytes_load = enc_file.read()
     
