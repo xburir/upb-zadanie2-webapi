@@ -333,6 +333,20 @@ def register_route():
                 os.makedirs('../files')
             if not path.exists("../files/"+session['user']):
                 os.makedirs('../files/'+session['user'])
+
+            # upload own public key
+            if request.method == 'POST' and 'file_own_public_key' in request.files:
+                file = request.files['file_own_public_key']
+                file_list = request.files.getlist('file_own_public_key')
+                if len(file_list) != 0 and file is not None:
+                    uploaded_key = find(file_list, lambda file: file.filename.endswith('.pem'))
+                    if uploaded_key is None:
+                        flash('Invalid file submitted. Key was generated instead.')
+                    else:
+                        user = session["user"]
+                        folder_path = "../keys/" + user + "/"
+                        uploaded_key_filename = user + "_publicKey.pem"
+                        uploaded_key.save(os.path.join(folder_path, uploaded_key_filename))
             return redirect('/encrypt')
     return render_template('register.html.jinja')
 
